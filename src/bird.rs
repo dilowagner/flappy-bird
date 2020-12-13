@@ -209,3 +209,85 @@ fn velocity_rotator_system(
     let rad_angle = (1.0 - porcentage) * velocity_rotator.angle_down + porcentage * velocity_rotator.angle_up;
     rotation.0 = Quat::from_rotation_z(rad_angle);
 }
+
+fn velocity_animator_system(mut query: Query<(&mut Animations, &Velocity)>) {
+    for (mut animations, velocity) in &mut query.iter() {
+        if velocity.0.y() > 0.0 {
+            animations.current_animation = 0;
+        } else {
+            animations.current_animation = 1;
+        }
+    }
+}
+
+pub fn spawn_bird(
+    commands: &mut Commands,
+    asset_server: &mut Res<AssetServer>,
+    mut textures: &mut ResMut<Assets<Texture>>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+) {
+    let texture_handle = asset_server
+        .load_sync(&mut textures, "assets/bird.png")
+        .unwrap();
+    asset_server
+        .load_sync(&mut textures, "assets/pipe.png")
+        .unwrap();
+    let texture = textures.get(&texture_handle).unwrap();
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, texture.size,2,2);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    commands
+        .spawn(SpriteComponents {
+            texture_atlas: texture_atlas_handle,
+            scale: Scale(6.0),
+            translation: Translation::new(0.0, 0.0, 100.0),
+            draw: Draw {
+                is_transparent: true,
+                is_visible: true,
+                render_commands: Vec::new(),
+            },
+            ..Default::default()
+        })
+        .with(Timer::from_seconds(0.1, true))
+        .with(Player)
+        .with(AffectedByGravity)
+        .with(VelocityRotator {
+            angle_up: std::f32::consts::PI * 0.5 * 0.7,
+            angle_down: -std::f32::consts::PI * 0.5 * 0.5,
+            velocity_max: 400.0,
+        })
+        .with(Velocity(Vec2::zero()))
+        .with(Animations {
+            animations: vec![
+                Animation {
+                    current_frame: 0,
+                    frames: vec![
+                        AnimationFrame {
+                            index: 0,
+                            time: 0.1,
+                        },
+                        AnimationFrame {
+                            index: 1,
+                            time: 0.1,
+                        },
+                        AnimationFrame {
+                            index: 2,
+                            time: 0.3,
+                        },
+                        AnimationFrame {
+                            index: 1,
+                            time: 0.1,
+                        },
+                    ],
+                },
+                Animation {
+                    current_frame: 0,
+                    frames: vec![AnimationFrame {
+                        index: 3,
+                        time: 0.2,
+                    }],
+                },
+            ],
+            current_animation: 0,
+        });
+}
