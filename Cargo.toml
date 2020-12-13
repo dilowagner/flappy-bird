@@ -1,0 +1,11 @@
+[package]
+name = "flappy-bird"
+version = "0.1.0"
+authors = ["dilowagner"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = {git = "https://github.com/bevyengine/bevy.git", rev = "25f62f72"}
+rand = "0.7.3"
